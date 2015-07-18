@@ -39,6 +39,9 @@ frequencies = M.fromList [
   , ('Z', 0.07)
   , (' ', 10)
   , ('.', 0.2)
+  , ('\'', 0.2)
+  , (',', 0.2)
+  , ('?', 0.2)
   ]
 
 logFrequency :: M.Map Char Double
@@ -48,7 +51,7 @@ stdEntropy :: Double
   where
     freqRaw = map (\c ->
                     let def = if 32 <= ord c && ord c <= 127
-                              then 0.005 else 0.0001
+                              then 0.001 else 0.00001
                     in M.findWithDefault def (toUpper c) frequencies)
               [chr 0..chr 255]
     freqBalanced = let tot = sum freqRaw in map (/ tot) freqRaw

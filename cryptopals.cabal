@@ -16,6 +16,9 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+     Set3.BreakBadCTRStatistically
+     Set3.BreakBadCTR
+     Set3.ImplementCTR
      Set3.CBCPadding
      Set2.CBCBitFlip
      Set2.ECBCutPaste
