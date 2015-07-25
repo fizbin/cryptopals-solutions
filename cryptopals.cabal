@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+     Set3.ImplementMT19937
      Set3.BreakBadCTRStatistically
      Set3.BreakBadCTR
      Set3.ImplementCTR
@@ -38,6 +39,7 @@ library
   -- other-extensions:
   default-extensions:  OverloadedStrings
   build-depends:       base, base64-bytestring, base16-bytestring, bytestring,
-                       containers, cryptonite, mtl, transformers, tagged
+                       containers, cryptonite, mtl, transformers, tagged,
+                       array, vector, memory
   hs-source-dirs:      src
   default-language:    Haskell2010
