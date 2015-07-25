@@ -7,6 +7,13 @@ module Set3.ImplementMT19937 (
   , mt19937_64
   , newTwisted
   , pullTwisted
+  , _tcW, _tcN, _tcM, _tcR
+  , _tcA
+  , _tcU, _tcD
+  , _tcS, _tcB
+  , _tcT, _tcC
+  , _tcL
+  , _tcF
   )
 where
 
@@ -83,18 +90,35 @@ pullTwisted tw@(TwistedC cfg _ _) = pullTwisted' tw
           y4 = y3 `xor` ((y3 `shiftL` _tcT cfg) .&. _tcC cfg)
           y5 = y4 `xor` (y4 `shiftR` _tcL cfg)
       in (y5, TwistedC cfg (i+1) arr)
-    genXOR y 0 = y `shiftR` 1
-    genXOR y _ = (y `shiftR` 1) `xor` _tcA cfg
+    genVal far y 0 = xor far $ y `shiftR` 1
+    genVal far y _ = xor far $ (y `shiftR` 1) `xor` _tcA cfg
     lower_mask = (1 `shiftL` _tcR cfg) - 1
     upper_mask = complement lower_mask
     generateNums arr' = runST $ freeze =<< do
       arr <- thaw arr'
-      forM_ [0.._tcN cfg - 1] $ \i -> do
+      
+      forM_ [0.._tcN cfg - 1 - _tcM cfg] $ \i -> do
         cur <- Mut.read arr i
-        nxt <- Mut.read arr ((i+1) `mod` _tcN cfg)
-        let y = (cur .&. upper_mask) + (nxt .&. lower_mask)
-        far <- Mut.read arr ((i+_tcM cfg) `mod` _tcN cfg)
-        Mut.write arr i $ far `xor` genXOR y (y `mod` 2)
+        nxt <- Mut.read arr (i+1)
+        let y = (cur .&. upper_mask) .|. (nxt .&. lower_mask)
+        far <- Mut.read arr (i + _tcM cfg)
+        Mut.write arr i $ genVal far y (y `mod` 2)
+
+      let reachBack = _tcN cfg - _tcM cfg
+      forM_ [_tcN cfg - _tcM cfg .. _tcN cfg - 2]  $ \i -> do
+        cur <- Mut.read arr i
+        nxt <- Mut.read arr (i+1)
+        let y = (cur .&. upper_mask) .|. (nxt .&. lower_mask)
+        far <- Mut.read arr (i - reachBack)
+        Mut.write arr i $ genVal far y (y `mod` 2)
+
+      do
+        cur <- Mut.read arr (_tcN cfg - 1)
+        nxt <- Mut.read arr 0
+        let y = (cur .&. upper_mask) .|. (nxt .&. lower_mask)
+        far <- Mut.read arr (_tcM cfg - 1)
+        Mut.write arr (_tcN cfg - 1) $ genVal far y (y `mod` 2)
+
       return arr
 
 dumpData :: (Unbox i) => Twisted i -> (Int, [i])
