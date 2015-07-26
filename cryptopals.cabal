@@ -16,6 +16,8 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+     Set3.MTStreamCipher
+     Set3.CloneMT
      Set3.TimeBasedMT
      Set3.ImplementMT19937
      Set3.BreakBadCTRStatistically

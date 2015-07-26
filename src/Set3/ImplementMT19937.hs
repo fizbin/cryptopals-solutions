@@ -5,7 +5,7 @@ module Set3.ImplementMT19937 (
   , TwistedConfig
   , mt19937
   , mt19937_64
-  , newTwisted
+  , newTwisted, newFromState
   , pullTwisted
   , _tcW, _tcN, _tcM, _tcR
   , _tcA
@@ -21,6 +21,7 @@ import Control.Arrow (first)
 import Control.Monad.ST
 import Data.Bits
 import Data.ByteArray (pack)
+import Data.Monoid
 import Data.Vector.Unboxed hiding (forM_, (++))
 import qualified Data.Vector.Unboxed.Mutable as Mut
 import Data.Word
@@ -75,6 +76,14 @@ newTwisted cfg seed = TwistedC cfg (_tcN cfg) (runST (mkArray >>= freeze))
         Mut.write ret i n
       return ret
 
+newFromState :: forall i. (Num i, Bits i, Unbox i) =>
+                TwistedConfig i -> Int -> [i] -> Twisted i
+newFromState cfg index state = check `seq` TwistedC cfg index (fromList state)
+  where
+    check = if (P.length state == _tcN cfg) &&
+               (0 <= index) &&
+               (index <= _tcN cfg) then ()
+            else error "Bad input"
 
 pullTwisted :: (Integral i, Num i, Bits i, Unbox i) =>
                Twisted i -> (i, Twisted i)
@@ -94,9 +103,9 @@ pullTwisted tw@(TwistedC cfg _ _) = pullTwisted' tw
     genVal far y _ = xor far $ (y `shiftR` 1) `xor` _tcA cfg
     lower_mask = (1 `shiftL` _tcR cfg) - 1
     upper_mask = complement lower_mask
-    generateNums arr' = runST $ freeze =<< do
+    generateNums arr' = runST $ unsafeFreeze =<< do
       arr <- thaw arr'
-      
+
       forM_ [0.._tcN cfg - 1 - _tcM cfg] $ \i -> do
         cur <- Mut.read arr i
         nxt <- Mut.read arr (i+1)
