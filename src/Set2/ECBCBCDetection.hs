@@ -9,7 +9,7 @@ import Data.Monoid
 import Data.Proxy
 import Data.Word
 import Control.Applicative
-import Control.Monad.Error
+import Control.Monad.Except
 import Crypto.Cipher.AES
 import Crypto.Cipher.Types
 import Crypto.Error
@@ -53,8 +53,8 @@ randomEncrypt n plainText' = do
   let p = Proxy :: Proxy AES128
   (if n == 0 then randomEncryptEBC else randomEncryptCBC) plainText' p
   where
-    doRandomEncrypt plainText p rest = runErrorT $ do
-      cipher <- (`asProxyTypeOf` p) <$> ErrorT randomCipher
+    doRandomEncrypt plainText p rest = runExceptT $ do
+      cipher <- (`asProxyTypeOf` p) <$> ExceptT randomCipher
       prefixLen <- lift $ randomInt 5 10
       suffixLen <- lift $ randomInt 5 10
       prefix <- lift $ getRandomBytes prefixLen

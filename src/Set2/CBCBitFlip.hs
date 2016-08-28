@@ -71,7 +71,7 @@ mkOracles cipher = (encryptedProfileFor, isAdmin)
                           concatMap escaper userdata <>
                           ";comment2=%20like%20a%20pound%20of%20bacon"
       where
-        escaper x | x `elem` ";%=" = "%" <> H.toHex (BC.singleton x)
+        escaper x | x `elem` (";%="::String) = "%" <> H.toHex (BC.singleton x)
         escaper x = [x]
 
 answer :: IO ()

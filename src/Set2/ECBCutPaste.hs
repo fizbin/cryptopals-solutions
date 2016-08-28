@@ -30,7 +30,7 @@ parseCookie s = let (piece, rest') = break (== '&') s
 profileFor :: String -> String
 profileFor email = "email=" <> concatMap escaper email <> "&uid=10&role=user"
   where
-    escaper x | x `elem` "%&=" = "%" <> H.toHex (BC.singleton x)
+    escaper x | x `elem` ("%&="::String) = "%" <> H.toHex (BC.singleton x)
     escaper x = [x]
 
 mkOracles :: (BlockCipher c) =>
