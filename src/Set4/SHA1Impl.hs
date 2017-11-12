@@ -83,15 +83,18 @@ sha1_processChunk chunk (h0, h1, h2, h3, h4) =
            (zipWith xor (drop 2 w') w'))
 
 sha1 :: B.ByteString -> B.ByteString
-sha1 bs = flip evalState (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476,
-                          0xC3D2E1F0) $ do
+sha1 bs =
   let bs' = sha1_preproc bs
       chunkify b = if B.null b then []
                    else let (b1, b2) = B.splitAt 64 b
                         in b1 : chunkify b2
       chunks = chunkify bs'
+  in sha1' (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0) chunks
+
+sha1' :: (Word32, Word32, Word32, Word32, Word32) -> [B.ByteString]
+      -> B.ByteString
+sha1' s0 chunks = flip evalState s0 $ do
   forM_ chunks $ \c -> modify (sha1_processChunk c)
   (h0, h1, h2, h3, h4) <- get
   return $ word32be h0 <> word32be h1 <> word32be h2 <> word32be h3
     <> word32be h4
-

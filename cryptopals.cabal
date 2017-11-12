@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+     Set4.AttackSHA1PrefixMac
      Set4.SHA1Impl
      Set4.CBCIVeqKey
      Set4.CTRBitFlip
