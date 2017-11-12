@@ -1,30 +1,32 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Set4.AttackSHA1PrefixMac where
+module Set4.AttackMD4PrefixMac where
 
-import Set4.SHA1Impl
+import Set4.MD4Impl
 import Crypto.Random
+import Control.Monad
+import Data.Binary.Get
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import Data.Monoid
 
 makeSignatureAndVerifier :: B.ByteString -> B.ByteString
   -> (B.ByteString, B.ByteString -> B.ByteString -> Bool)
 makeSignatureAndVerifier key message =
-  let sig = sha1(key <> message)
-      verifier message' sig' = sha1(key <> message') == sig'
+  let sig = md4 (key <> message)
+      verifier message' sig' = md4 (key <> message') == sig'
   in (sig, verifier)
 
 fakeSignature :: Int -> B.ByteString -> B.ByteString
               -> (B.ByteString, B.ByteString)
 fakeSignature keyLength sampleMsg sampleSig =
-  let sampleMsgPP = sha1_preproc (B.replicate keyLength 0 <> sampleMsg)
+  let sampleMsgPP = md4_preproc (B.replicate keyLength 0 <> sampleMsg)
       goalMsg = sampleMsgPP <> ";XXX;admin=true"
-      goalMsgPP = sha1_preproc goalMsg
+      goalMsgPP = md4_preproc goalMsg
       lastGoalBlock = B.drop (B.length goalMsgPP - 64) goalMsgPP
-      [a, b, c, d, e] = readW32s sampleSig
-      readW32s bs = if B.null bs then []
-                    else readWord32be bs : readW32s (B.drop 4 bs)
-      newSig = sha1' (a, b, c, d, e) [lastGoalBlock]
+      [a, b, c, d] = readW32s sampleSig
+      readW32s = runGet (replicateM 4 getWord32le) . BL.fromStrict
+      newSig = md4' (a, b, c, d) [lastGoalBlock]
   in (B.drop keyLength goalMsg, newSig)
 
 findSpoof :: (B.ByteString -> B.ByteString -> Bool) -> B.ByteString

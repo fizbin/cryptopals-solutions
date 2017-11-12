@@ -16,6 +16,8 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+     Set4.AttackMD4PrefixMac
+     Set4.MD4Impl
      Set4.AttackSHA1PrefixMac
      Set4.SHA1Impl
      Set4.CBCIVeqKey
@@ -48,6 +50,6 @@ library
   default-extensions:  OverloadedStrings
   build-depends:       base, base64-bytestring, base16-bytestring, bytestring,
                        containers, cryptonite, mtl, transformers, tagged,
-                       array, vector, memory, time
+                       array, vector, memory, time, binary
   hs-source-dirs:      src
   default-language:    Haskell2010
