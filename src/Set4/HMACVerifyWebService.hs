@@ -40,7 +40,7 @@ notFound = Wai.responseLBS status404 [("Content-type", "text/plain")]
 insecureCompare :: (DBA.ByteArrayAccess a, DBA.ByteArrayAccess b) =>
                    a -> b -> IO Bool
 insecureCompare a b = do
-  let byteSleep = threadDelay 50000 -- arg is microseconds; 5000 = 5ms
+  let byteSleep = threadDelay 5000 -- arg is microseconds; 5000 = 5ms
       aLen = DBA.length a
       bLen = DBA.length b
       doComparison :: Ptr Word8 -> Ptr Word8 -> Int -> IO Bool

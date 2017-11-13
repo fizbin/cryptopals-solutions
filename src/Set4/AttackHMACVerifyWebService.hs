@@ -28,8 +28,11 @@ attackOneByte urlPrefix file sigPrefix nTimings =
   fmap (either Right Left) $ runExceptT $ do
   manager <- lift $ newManager defaultManagerSettings
   rawTimings <- replicateM nTimings (getTimings manager)
-  let timings = map (/ fromIntegral nTimings) $
-                foldr1 (zipWith (+)) rawTimings
+  let allTimings = foldr (zipWith (:)) (repeat []) rawTimings
+      aggregate ts = let ts' = sort ts
+                         ts'' = take ((1 + length ts') `div` 2) ts'
+                     in sum ts'' / fromIntegral (length ts'')
+      timings = map aggregate allTimings
       maxTime = maximum timings :: Double
       restTimes = filter (< maxTime) timings
       avgRest = sum restTimes / 255
@@ -47,7 +50,7 @@ attackOneByte urlPrefix file sigPrefix nTimings =
   where
     getTimings :: Manager -> ExceptT B.ByteString IO [Double]
     getTimings manager = fmap (map snd . sort) . convTimings $ do
-      qsem <- liftIO $ newQSem 1
+      qsem <- liftIO $ newQSem 4
       bytes <- liftIO $ shuffleM [minBound..maxBound :: Word8]
       liftIO $ flip mapConcurrently bytes $
         \b -> bracket_ (waitQSem qsem) (signalQSem qsem) $ runExceptT $ do
@@ -81,7 +84,7 @@ attackURL target fileVal = attackURLFrom ""
   where
     attackURLFrom prefix = do
       putStrLn $ "Found " ++ show (toHex prefix)
-      attackResult <- attackOneByte target fileVal prefix 2
+      attackResult <- attackOneByte target fileVal prefix 10
       case attackResult of
         Left b -> attackURLFrom (B.snoc prefix b)
         Right sig -> putStrLn $ "Signature is " ++ toHex sig
