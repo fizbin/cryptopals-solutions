@@ -30,7 +30,7 @@ attackOneByte urlPrefix file sigPrefix nTimings =
   rawTimings <- replicateM nTimings (getTimings manager)
   let allTimings = foldr (zipWith (:)) (repeat []) rawTimings
       aggregate ts = let ts' = sort ts
-                         ts'' = take ((1 + length ts') `div` 2) ts'
+                         ts'' = take ((2 + length ts') `div` 3) ts'
                      in sum ts'' / fromIntegral (length ts'')
       timings = map aggregate allTimings
       maxTime = maximum timings :: Double
