@@ -4,7 +4,7 @@
 
 module Set5.DiffieHellman where
 
-import "random" System.Random
+import "MonadRandom" Control.Monad.Random
 
 modpow :: Integer -> Integer -> Integer -> Integer
 modpow _ 0 _ = 1
@@ -33,12 +33,23 @@ newtype PrivateInt = PrivateInt Integer deriving (Eq, Ord, Show)
 data DHKey = DHKey { publicKey :: PublicInt, privateKey :: PrivateInt,
                      dhKeyG :: Integer, dhKeyP :: Integer }
 
+unPrivate :: PrivateInt -> Integer
+unPrivate (PrivateInt x) = x
+
 getSessionKey :: DHKey -> DHKey -> PrivateInt
 getSessionKey dhkey1 dhkey2 = case (publicKey dhkey1, privateKey dhkey2) of
-  (PublicInt a, PrivateInt b) -> PrivateInt $ modpow a b (dhKeyP dhkey1)
+  (PublicInt a, PrivateInt b) -> PrivateInt $ modpow a b (dhKeyP dhkey2)
+
+getSessionKey' :: Integer -> DHKey -> PrivateInt
+getSessionKey' dhkey1 dhkey2 = case (dhkey1, privateKey dhkey2) of
+  (a, PrivateInt b) -> PrivateInt $ modpow a b (dhKeyP dhkey2)
+
 
 makeDHKey :: IO DHKey
-makeDHKey = do
-  a <- randomRIO (10000, dh_defaultP) :: IO Integer
-  let aA = modpow dh_defaultG a dh_defaultP
-  return $ DHKey (PublicInt aA) (PrivateInt a) dh_defaultG dh_defaultP
+makeDHKey = makeDHKey' dh_defaultP dh_defaultG
+
+makeDHKey' :: (MonadRandom m) => Integer -> Integer -> m DHKey
+makeDHKey' p g = do
+  a <- getRandomR (10000, p)
+  let aA = modpow g a p
+  return $ DHKey (PublicInt aA) (PrivateInt a) g p

@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+     Set5.EchoBot
      Set5.DiffieHellman
      --Set4.AttackHMACVerifyWebService
      Set4.AttackMD4PrefixMac
